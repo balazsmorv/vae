@@ -1,0 +1,28 @@
+ddconfig:
+  ch: 16
+  out_ch: 1
+  ch_mult: [1, 2, 2]
+  num_res_blocks: 2
+  attn_resolutions: [15]
+  attn_heads: 4
+  attn_dim_head: 8
+  in_channels: 1
+  resolution: 64
+  z_channels: 16
+  double_z: true
+lossconfig:
+  disc_start: 9999999
+  disc_in_channels: 1
+  perceptual_weight: 0.0
+  kl_weight: 0.000001
+  disc_weight: 0.0
+  disc_factor: 0.0
+  version3d: true
+  datadim: 3
+embed_dim: 16
+image_key: "fmri"
+learning_rate: !!float 2e-4
+version3d: false
+latent_scale: null
+
+
