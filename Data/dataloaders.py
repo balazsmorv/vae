@@ -180,7 +180,7 @@ class ABIDELoader(MedicalDataLoaderBase):
             rescale: bool = False,
             num_workers: int = 0,
             prefetch_factor: int = None,
-            persistent_workers: bool = None
+            persistent_workers: bool = None,
     ):
         """
         Handler class for the  ABIDE I pre-processed fMRI dataset.
@@ -195,14 +195,11 @@ class ABIDELoader(MedicalDataLoaderBase):
                          num_workers, prefetch_factor, persistent_workers)
 
     def setup(self, stage: str) -> None:
-        dataset = ABIDEDataset4D if ('length' in self.config.keys() and self.config['length'] > 1) else ABIDEDataset
+        dataset = ABIDEDataset
         # Load data
         if stage == 'fit':
             self.train_set = dataset(self.root_dir, opj(self.exp_path, 'train.csv'), self.config['rescale'], self.config['modalities'])
-            #try:
             self.val_set = dataset(self.root_dir, opj(self.exp_path, 'val.csv'), self.config['rescale'], self.config['modalities'])
-            #except:
-            #    print('No validation set!')
         elif stage == 'test':
             self.test_set = dataset(self.root_dir, opj(self.exp_path, 'test.csv'), self.config['rescale'], self.config['modalities'])
         elif stage == 'pred4train':

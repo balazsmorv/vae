@@ -23,6 +23,7 @@ class AutoencoderKL(pl.LightningModule):
                  ddconfig,
                  lossconfig,
                  embed_dim,
+                 learning_rate,
                  ckpt_path=None,
                  ignore_keys=[],
                  image_key="fmri",
@@ -35,6 +36,8 @@ class AutoencoderKL(pl.LightningModule):
                  ):
         super().__init__()
         self.image_key = image_key
+
+        self.learning_rate = learning_rate
 
         if not version3d:
             self.encoder = Encoder(**ddconfig)

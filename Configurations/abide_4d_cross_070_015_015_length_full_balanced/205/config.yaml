@@ -1,4 +1,0 @@
-context_scale: set_std_norm
-length: 205
-modalities: null
-rescale: set_std_norm

@@ -64,7 +64,8 @@ class MedicalDatasetBase(Dataset):
             
             
 class ABIDEDataset(MedicalDatasetBase):
-    def __init__(self, root_dir: str, set_file: str, rescale: str = None, cond_modality_list: List[str] = None):
+    def __init__(self, root_dir: str, set_file: str, rescale: str = None,
+                 cond_modality_list: List[str] = None):
         """
         Dataset handler for the pre-processed ABIDE I fMRI dataset.
 
@@ -76,12 +77,15 @@ class ABIDEDataset(MedicalDatasetBase):
         self.cond_modality_list = cond_modality_list
         self._setup()
 
+    def _load_set_info(self) -> None:
+        self._set_info = pd.read_csv(self.set_file, sep=',')
+
     def __getitem__(self, item: int) -> dict:
         data_info = self._set_info.iloc[item]
         try:
             data = {
                 'label': self._encoded_labels[item],
-                'fmri': self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., data_info['TIME_SLICE'].copy()],
+                'fmri': self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., data_info['TIME_SLICE']],
                 'subject': data_info['FILE_ID'],
                 'affine': self._data_src[data_info['FILE_ID']]['fmri'].affine
             }
@@ -94,11 +98,7 @@ class ABIDEDataset(MedicalDatasetBase):
                 context = self._get_condition_item(data_info)
                 if self.rescale is not None:
                     stats = self._select_stats(data_info, self.rescale, 'ROI_')
-                    # print("RESCALA #######################")
-                    # print(stats)
                     context = self._rescale_data(context, self.rescale, stats)
-                    # print(context.max(), context.min())
-                    # exit()
                 data.update({
                     'context': context
                 })
@@ -138,12 +138,6 @@ class ABIDEDataset(MedicalDatasetBase):
         self._class_ids.sort()
         self._encoded_labels = [pt.tensor([1., 0.]).float() if label == 1 else pt.tensor([0., 1.]).float() 
                                 for label in self._set_info['DX_GROUP'].to_numpy()]
-        #one_hot(
-        #    pt.from_numpy(
-        #        self._set_info['DX_GROUP'].to_numpy() - self._class_ids[0]
-        #    ).long(),
-        #    num_classes=len(self._class_ids)
-        #).float()
         
     def _select_stats(self, data, strategy, context_key=''):
         if 'std' in strategy:
@@ -175,71 +169,5 @@ class ABIDEDataset(MedicalDatasetBase):
                 norm_range = (-1., 1.)
             else:
                 norm_range = (0., 1.)
-            return minmax_norm_data_np(data, stats=stats, norm_range=norm_range, dim=0) 
+            return minmax_norm_data_np(data, stats=stats, norm_range=norm_range, dim=0)
 
-
-class ABIDEDataset4D(ABIDEDataset):
-    def __init__(self, root_dir: str, set_file: str, rescale: str = None, cond_modality_list: List[str] = None):
-        """
-        Dataset handler for the pre-processed ABIDE I fMRI dataset;  4D data
-
-        Args:
-            root_dir: path of the directory containing data as a list of .nii.gz files
-            set_file: path of a pre-define .csv file containing information for subject, label, and fmri matching
-        """
-        super().__init__(root_dir, set_file, rescale)
-        self.cond_modality_list = cond_modality_list
-        self._setup()
-
-    def __getitem__(self, item: int) -> dict:
-        data_info = self._set_info.iloc[item]
-        try:
-            data = {
-                'label': self._encoded_labels[item],
-                'fmri': self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., data_info['START_TIME']:data_info['END_TIME']].copy(),
-                'subject': f"{data_info['FILE_ID']}_{data_info['START_TIME']}_{data_info['END_TIME']}",
-                'affine': self._data_src[data_info['FILE_ID']]['fmri'].affine
-            }
-            if self.rescale is not None:
-                stats = self._select_stats(data_info, self.rescale)
-                data['fmri'] = self._rescale_data(data['fmri'], self.rescale, stats)
-            
-            if self.cond_modality_list is not None:
-                context = self._get_condition_item(data_info, data_info['START_TIME'], data_info['END_TIME'])
-                if self.rescale is not None:
-                    stats = self._select_stats(data_info, self.rescale, 'ROI_')
-                    context = self._rescale_data(context, self.rescale, stats)
-                data.update({
-                    'context': context
-                })
-        except EOFError:
-            print("EOF Error, Check Data Info and regenerate labels!")
-            print(data_info)
-            raise
-        return data
-
-    def _get_condition_item(self, data_info: dict, start_time: int, stop_time: int) -> Union[pt.Tensor, None]:
-        if self.cond_modality_list is None:
-            return None
-        conditions = []
-        for modality in self.cond_modality_list:
-            mod_name = modality.split('.')[0]
-            conditions.append(
-                pt.from_numpy(self._data_src[data_info['FILE_ID']][mod_name].iloc[start_time:stop_time].to_numpy()).float()
-            )
-        conditions = pt.concatenate(conditions, dim=0)
-        return conditions
-
-
-class WhiteNoiseDataset(Dataset):
-    def __init__(self, num_samples: int, shape: Tuple[int, ...]):
-        super().__init__()
-        self.num_samples = num_samples
-        self.shape = shape
-        self.data = pt.randn((self.num_samples, *shape))
-
-    def __len__(self) -> int:
-        return self.num_samples
-
-    def __getitem__(self, item: int) -> dict:
-        return {'fmri': self.data[item]}
