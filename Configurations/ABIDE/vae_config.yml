@@ -16,7 +16,7 @@ lossconfig:
   perceptual_weight: 0.0
   kl_weight: 0.000001
   disc_weight: 0.0
-  version3d: true
+  version3d: false
 embed_dim: 4
 image_key: "fmri"
 learning_rate: !!float 2e-4

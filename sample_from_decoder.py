@@ -23,7 +23,7 @@ def main():
 
     transforms = {'fmri': [partial(einops.rearrange, pattern='b h l d -> b 1 d h l')]}
     datahandler = ABIDELoader(
-        root_dir=r"/Users/balazsmorvay/Downloads/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
+        root_dir=r"/home/oem/Dokumentumok/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
         exp_path=r"./Configurations/ABIDE",
         transforms=transforms,
         batch_size=batch_size,

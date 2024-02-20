@@ -46,7 +46,7 @@ class AutoencoderKL(pl.LightningModule):
             self.encoder = Encoder3D(**ddconfig)
             self.decoder = Decoder3D(**ddconfig)
 
-        self.loss = LPIPSWithDiscriminator()
+        self.loss = LPIPSWithDiscriminator(**lossconfig)
         assert ddconfig["double_z"]
         if not version3d:
             self.quant_conv = torch.nn.Conv2d(2 * ddconfig["z_channels"], 2 * embed_dim, 1)

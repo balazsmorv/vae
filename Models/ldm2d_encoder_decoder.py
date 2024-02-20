@@ -585,7 +585,7 @@ class Decoder(nn.Module):
                                         out_ch,
                                         kernel_size=(2, 2),
                                         stride=1,
-                                        padding=(2, 3),
+                                        padding=(2, 1),
                                         dilation=1)
 
     def forward(self, z):
