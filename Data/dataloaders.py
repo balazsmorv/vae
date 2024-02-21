@@ -194,14 +194,14 @@ class ABIDELoader(MedicalDataLoaderBase):
         super().__init__(root_dir, exp_path, batch_size, transforms, rescale,
                          num_workers, prefetch_factor, persistent_workers)
 
-    def setup(self, stage: str) -> None:
+    def setup(self, stage: str, test_filename = None) -> None:
         dataset = ABIDEDataset
         # Load data
         if stage == 'fit':
             self.train_set = dataset(self.root_dir, opj(self.exp_path, 'train.csv'), self.config['rescale'], self.config['modalities'])
             self.val_set = dataset(self.root_dir, opj(self.exp_path, 'val.csv'), self.config['rescale'], self.config['modalities'])
         elif stage == 'test':
-            self.test_set = dataset(self.root_dir, opj(self.exp_path, 'test.csv'), self.config['rescale'], self.config['modalities'])
+            self.test_set = dataset(self.root_dir, opj(self.exp_path, 'test.csv' if test_filename is None else test_filename), self.config['rescale'], self.config['modalities'])
         elif stage == 'pred4train':
             self.test_set = dataset(self.root_dir, opj(self.exp_path, 'train.csv'), self.config['rescale'], self.config['modalities'])
         elif stage == 'predict':
