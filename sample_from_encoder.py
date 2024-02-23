@@ -35,7 +35,7 @@ def main():
         prefetch_factor=2,
         persistent_workers=True
     )
-    datahandler.setup(stage='test', test_filename='NYU_all.csv')
+    datahandler.setup(stage='test', test_filename='UM_1.csv')
     dataloader = datahandler.test_dataloader()
 
     model = AutoencoderKL(**pipeline_cfg)
@@ -43,11 +43,11 @@ def main():
         vae_ckpt = torch.load(model_ckpt, map_location='cpu')
         model.load_state_dict(vae_ckpt['state_dict'])
         model.freeze()
-    encoder = model.encoder.to(device='cuda' if torch.cuda.is_available() else 'cpu').eval()
+    encoder = model.encoder.to(device='mps').eval()
 
     with torch.inference_mode():
         for idx, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
-            inp = batch['fmri']
+            inp = batch['fmri'].to(device='mps')
             label = np.array(batch['label'].to('cpu'))[0]
             file_id = batch['file_id'][0]
             out = np.array(encoder(inp).to('cpu'))
