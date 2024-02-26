@@ -14,8 +14,8 @@ from Data.dataloaders import ABIDELoader
 pl.seed_everything(42, workers=True)
 
 def main():
-    model_ckpt = "/home/oem/Dokumentumok/vae/logs/abide/240219_202224abideNYU/epoch=9-step=13500.ckpt"
-    experiment_name = 'abide'
+    model_ckpt = None
+    experiment_name = 'abide_video'
     site_used = "NYU"
     time_stamp = datetime.now().strftime("%y%m%d_%H%M%S") + 'abide' + site_used
     log_pth = f".{os.sep}logs"
@@ -33,12 +33,13 @@ def main():
 
     datahandler = ABIDELoader(
         root_dir=r"/home/oem/Dokumentumok/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
-        exp_path=r"./Configurations/ABIDE",
+        exp_path=r"./Configurations/ABIDE_video",
         transforms=transforms,
         batch_size=batch_size,
+        rescale=True,
         num_workers=12,
         prefetch_factor=2,
-        persistent_workers=True
+        persistent_workers=None
     )
 
     model = AutoencoderKL(**pipeline_cfg)
