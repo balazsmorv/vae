@@ -1,4 +1,4 @@
 context_scale: set_std_norm
 length: 77
-modalities: ["rois_tt.1D"]
+modalities: null
 rescale: minmax_norm
