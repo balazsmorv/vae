@@ -14,7 +14,7 @@ from Data.dataloaders import ABIDELoader
 pl.seed_everything(42, workers=True)
 
 def main():
-    model_ckpt = "/home/oem/Dokumentumok/vae/logs/abide/240219_202224abideNYU/epoch=9-step=13500.ckpt"
+    model_ckpt = "/home/oem/Dokumentumok/vae/logs/abide/240227_073027abideNYU/epoch=92-step=137500.ckpt"
     experiment_name = 'abide'
     site_used = "NYU"
     time_stamp = datetime.now().strftime("%y%m%d_%H%M%S") + 'abide' + site_used
@@ -47,11 +47,11 @@ def main():
         model.load_state_dict(vae_ckpt['state_dict'])
         #model.freeze()
 
-    ckpt_callback = ModelCheckpoint(dirpath=logger.log_dir, every_n_train_steps=750)
-    early_stopping_callback = EarlyStopping(monitor='val/total_loss', mode='min', patience=12, strict=True)
+    ckpt_callback = ModelCheckpoint(dirpath=logger.log_dir, save_top_k=1, monitor='val/total_loss', every_n_train_steps=500)
+    early_stopping_callback = EarlyStopping(monitor='val/total_loss', mode='min', patience=24, strict=True)
     trainer = pl.Trainer(logger=logger,
                          precision='32',
-                         val_check_interval=0.25,
+                         val_check_interval=0.75,
                          limit_val_batches=0.15,
                          #gradient_clip_val=1.,
                          detect_anomaly=True,
