@@ -46,7 +46,6 @@ def main():
     if model_ckpt is not None:
         vae_ckpt = torch.load(model_ckpt, map_location='cpu')
         model.load_state_dict(vae_ckpt['state_dict'])
-        #model.freeze()
 
     ckpt_callback = ModelCheckpoint(dirpath=logger.log_dir, every_n_train_steps=750)
     early_stopping_callback = EarlyStopping(monitor='val/total_loss', mode='min', patience=12, strict=True)

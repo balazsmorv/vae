@@ -61,10 +61,9 @@ class MedicalDatasetBase(Dataset):
     def _encode_labels(self) -> None:
         raise NotImplementedError
 
-            
-            
+
 class ABIDEDataset(MedicalDatasetBase):
-    def __init__(self, root_dir: str, set_file: str, rescale: str = None,
+    def __init__(self, root_dir: str, set_file: str, version3d = False, rescale: str = None,
                  cond_modality_list: List[str] = None):
         """
         Dataset handler for the pre-processed ABIDE I fMRI dataset.
@@ -74,6 +73,7 @@ class ABIDEDataset(MedicalDatasetBase):
             set_file: path of a pre-define .csv file containing information for subject, label, and fmri matching
         """
         super().__init__(root_dir, set_file, rescale)
+        self.version3d = version3d
         self.cond_modality_list = cond_modality_list
         self._setup()
 
@@ -84,9 +84,14 @@ class ABIDEDataset(MedicalDatasetBase):
         data_info = self._set_info.iloc[item]
         file_id: str = data_info['FILE_ID']
         try:
+            if self.version3d:
+                start_time, end_time = data_info['START_TIME'], data_info['END_TIME']
+                fmri_data = self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., start_time : end_time]
+            else:
+                fmri_data = self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., data_info['TIME_SLICE']]
             data = {
                 'label': self._encoded_labels[item],
-                'fmri': self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., data_info['TIME_SLICE']],
+                'fmri': fmri_data,
                 'subject': data_info['FILE_ID'],
                 'affine': self._data_src[data_info['FILE_ID']]['fmri'].affine,
                 'file_id': file_id
