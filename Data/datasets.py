@@ -83,13 +83,14 @@ class ABIDEDataset(MedicalDatasetBase):
     def __getitem__(self, item: int) -> dict:
         data_info = self._set_info.iloc[item]
         file_id: str = data_info['FILE_ID']
+        time_slice = data_info['TIME_SLICE']
         try:
             data = {
                 'label': self._encoded_labels[item],
-                'fmri': self._data_src[data_info['FILE_ID']]['fmri'].dataobj[..., data_info['TIME_SLICE']],
-                'subject': data_info['FILE_ID'],
-                'affine': self._data_src[data_info['FILE_ID']]['fmri'].affine,
-                'file_id': file_id
+                'fmri': self._data_src[file_id]['fmri'].dataobj[..., time_slice],
+                'subject': file_id,
+                'affine': self._data_src[file_id]['fmri'].affine,
+                'time_slice': time_slice
             }
             
             if self.rescale is not None:
