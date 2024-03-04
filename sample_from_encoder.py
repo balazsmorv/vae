@@ -41,7 +41,7 @@ def main():
         persistent_workers=True,
         rescale=True
     )
-    datahandler.setup(stage='test', test_filename='UM_1.csv')
+    datahandler.setup(stage='test', test_filename='NYU_UM1_merged.csv')
     dataloader = datahandler.test_dataloader()
 
     model = AutoencoderKL(**pipeline_cfg)
@@ -59,11 +59,11 @@ def main():
             latent = np.array(model.encode(inp_fmri.squeeze()).mode().to('cpu'))
             latent = (latent - latent.min()) / (latent.max() - latent.min()) * 2 - 1
 
-            for element_idx in range(len(batch)):
+            for element_idx in range(len(batch['label'])):
                 label = np.array(batch['label'].to('cpu'))[element_idx]
                 file_id = batch['subject'][element_idx]
                 time_slice = int(batch['time_slice'][element_idx])
-                np.save(file=os.path.join(asset_path, f'{file_id}.npy'), arr=latent[element_idx])
+                np.save(file=os.path.join(asset_path, f'{file_id}-{time_slice}.npy'), arr=latent[element_idx])
                 labels.loc[len(labels)] = [file_id, 1 if label[0] == 1.0 else 2, time_slice]
 
     labels.to_csv(path_or_buf=os.path.join(asset_path, 'labels.csv'))
