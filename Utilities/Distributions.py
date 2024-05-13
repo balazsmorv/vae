@@ -25,9 +25,15 @@ class DiagonalGaussianDistribution(object):
             return torch.Tensor([0.])
         else:
             if other is None:
+                # Use when multi dim latent:
+                # return 0.5 * torch.sum(torch.pow(self.mean, 2)
+                #                       + self.var - 1.0 - self.logvar,
+                #                       dim=[1, 2, 3])
+
+                # Use when vector latent
                 return 0.5 * torch.sum(torch.pow(self.mean, 2)
                                        + self.var - 1.0 - self.logvar,
-                                       dim=[1, 2, 3])
+                                       dim=[1])
             else:
                 return 0.5 * torch.sum(
                     torch.pow(self.mean - other.mean, 2) / other.var

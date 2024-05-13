@@ -17,7 +17,7 @@ pl.seed_everything(42, workers=True)
 device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
 def main():
-    model_ckpt = "/Users/balazsmorvay/Downloads/epoch=96-step=143500.ckpt"
+    model_ckpt = "/home/oem/Dokumentumok/vae/logs/abide_flat_z/240427_102110abideNYU/epoch=909-step=862000.ckpt"
     batch_size = 1
     time_stamp = datetime.now().strftime("%y%m%d_%H%M%S")
     asset_path = os.path.join('Assets/', time_stamp)
@@ -31,7 +31,7 @@ def main():
                            partial(F.pad, pad=(0, 0, 3, 3))]}
 
     datahandler = ABIDELoader(
-        root_dir=r"/Users/balazsmorvay/Downloads/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
+        root_dir=r"/home/oem/Dokumentumok/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
         exp_path=r"./Configurations/ABIDE",
         transforms=transforms,
         batch_size=batch_size,

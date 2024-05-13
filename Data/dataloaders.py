@@ -54,7 +54,8 @@ class MedicalDataLoaderBase(pl.LightningDataModule):
                           shuffle=True,
                           num_workers=self.num_workers,
                           prefetch_factor=self.prefetch_factor,
-                          persistent_workers=self.persistent_workers)
+                          persistent_workers=self.persistent_workers,
+                          pin_memory=True)
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(self.val_set,
@@ -62,7 +63,8 @@ class MedicalDataLoaderBase(pl.LightningDataModule):
                           shuffle=False,
                           num_workers=self.num_workers,
                           prefetch_factor=self.prefetch_factor,
-                          persistent_workers=self.persistent_workers)
+                          persistent_workers=self.persistent_workers,
+                          pin_memory=True)
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(self.test_set,
@@ -70,7 +72,8 @@ class MedicalDataLoaderBase(pl.LightningDataModule):
                           shuffle=False,
                           num_workers=self.num_workers,
                           prefetch_factor=self.prefetch_factor,
-                          persistent_workers=self.persistent_workers)
+                          persistent_workers=self.persistent_workers,
+                          pin_memory=True)
 
     def predict_dataloader(self) -> DataLoader:
         return DataLoader(self.test_set,
@@ -78,7 +81,8 @@ class MedicalDataLoaderBase(pl.LightningDataModule):
                           shuffle=False,
                           num_workers=self.num_workers,
                           prefetch_factor=self.prefetch_factor,
-                          persistent_workers=self.persistent_workers)
+                          persistent_workers=self.persistent_workers,
+                          pin_memory=True)
 
     def _rescale_data(self, data: pt.Tensor, strategy: str) -> pt.Tensor:
         if strategy == "std_norm":

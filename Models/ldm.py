@@ -70,6 +70,9 @@ class AutoencoderKL(pl.LightningModule):
         self.mse = tm.MeanSquaredError()
         self.ssim = tmi.StructuralSimilarityIndexMeasure()
 
+        self.flatten = torch.nn.Flatten()
+        self.dense = torch.nn.Linear(in_features=2304, out_features=2304)
+
     def init_from_ckpt(self, path, ignore_keys=list()):
         sd = torch.load(path, map_location="cpu")["state_dict"]
         keys = list(sd.keys())
@@ -86,10 +89,13 @@ class AutoencoderKL(pl.LightningModule):
         #     x = einops.rearrange(x, 'b t u h w c -> b c u t h w')
         h = self.encoder(x)
         moments = self.quant_conv(h)
-        posterior = DiagonalGaussianDistribution(moments)
+        posterior = self.flatten(moments)
+        posterior = self.dense(posterior)
+        posterior = DiagonalGaussianDistribution(posterior)
         return posterior
 
     def decode(self, z):
+        z = z.view(size=(-1, 4, 16, 18))
         z = self.post_quant_conv(z)
         dec = self.decoder(z)
         return dec
