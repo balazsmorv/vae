@@ -14,11 +14,12 @@ from tqdm import tqdm
 import torch.nn.functional as F
 
 pl.seed_everything(42, workers=True)
-device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
 def main():
-    model_ckpt = "/home/oem/Dokumentumok/vae/logs/abide_flat_z/240427_102110abideNYU/epoch=909-step=862000.ckpt"
-    batch_size = 1
+    model_ckpt = "/Users/balazsmorvay/Downloads/epoch=96-step=143500.ckpt"
+    batch_size = 256
+    device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
+    print(f'{device} is available')
     time_stamp = datetime.now().strftime("%y%m%d_%H%M%S")
     asset_path = os.path.join('Assets/', time_stamp)
     os.mkdir(asset_path)
@@ -35,15 +36,16 @@ def main():
         exp_path=r"./Configurations/ABIDE",
         transforms=transforms,
         batch_size=batch_size,
-        num_workers=0,
-        prefetch_factor=None,
-        persistent_workers=None,
+        num_workers=10,
+        prefetch_factor=12,
+        persistent_workers=True,
         rescale=True
     )
-    datahandler.setup(stage='test', test_filename='NYU_all.csv')
+    datahandler.setup(stage='test', test_filename='NYU_UM1_merged.csv')
     dataloader = datahandler.test_dataloader()
 
     model = AutoencoderKL(**pipeline_cfg)
+    model = model.to(device)
     if model_ckpt is not None:
         vae_ckpt = torch.load(model_ckpt, map_location='cpu')
         model.load_state_dict(vae_ckpt['state_dict'])
@@ -53,14 +55,16 @@ def main():
     with torch.inference_mode():
         for idx, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
             inp = datahandler.on_after_batch_transfer(batch, idx)
-            inp_fmri = model.get_input(inp, 'fmri')
-            label = np.array(batch['label'].to('cpu'))[0]
-            file_id = batch['subject'][0]
-            time_slice = int(batch['time_slice'][0])
-            latent = np.array(model.encode(inp_fmri.squeeze(0)).mode().to('cpu'))
+            inp_fmri = model.get_input(inp, 'fmri').to(device)
+            latent = np.array(model.encode(inp_fmri.squeeze()).mode().to('cpu'))
             latent = (latent - latent.min()) / (latent.max() - latent.min()) * 2 - 1
-            np.save(file=os.path.join(asset_path, f'{file_id}.npy'), arr=latent)
-            labels.loc[len(labels)] = [file_id, 1 if label[0] == 1.0 else 2, time_slice]
+
+            for element_idx in range(len(batch['label'])):
+                label = np.array(batch['label'].to('cpu'))[element_idx]
+                file_id = batch['subject'][element_idx]
+                time_slice = int(batch['time_slice'][element_idx])
+                np.save(file=os.path.join(asset_path, f'{file_id}-{time_slice}.npy'), arr=latent[element_idx])
+                labels.loc[len(labels)] = [file_id, 1 if label[0] == 1.0 else 2, time_slice]
 
     labels.to_csv(path_or_buf=os.path.join(asset_path, 'labels.csv'))
 
