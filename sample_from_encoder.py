@@ -16,7 +16,7 @@ import torch.nn.functional as F
 pl.seed_everything(42, workers=True)
 
 def main():
-    model_ckpt = "/Users/balazsmorvay/Downloads/epoch=96-step=143500.ckpt"
+    model_ckpt = "/Users/balazsmorvay/Downloads/epoch=909-step=862000.ckpt"
     batch_size = 256
     device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
     print(f'{device} is available')
@@ -32,7 +32,7 @@ def main():
                            partial(F.pad, pad=(0, 0, 3, 3))]}
 
     datahandler = ABIDELoader(
-        root_dir=r"/home/oem/Dokumentumok/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
+        root_dir=r"/Users/balazsmorvay/Downloads/ABIDE/data/Outputs/ccs/filt_noglobal/func_preproc",
         exp_path=r"./Configurations/ABIDE",
         transforms=transforms,
         batch_size=batch_size,
@@ -41,7 +41,7 @@ def main():
         persistent_workers=True,
         rescale=True
     )
-    datahandler.setup(stage='test', test_filename='NYU_UM1_merged.csv')
+    datahandler.setup(stage='test', test_filename='UM_1.csv')
     dataloader = datahandler.test_dataloader()
 
     model = AutoencoderKL(**pipeline_cfg)
@@ -56,11 +56,11 @@ def main():
         for idx, batch in tqdm(enumerate(dataloader), total=len(dataloader)):
             inp = datahandler.on_after_batch_transfer(batch, idx)
             inp_fmri = model.get_input(inp, 'fmri').to(device)
-            latent = np.array(model.encode(inp_fmri.squeeze()).mode().to('cpu'))
+            latent = model.encode(inp_fmri.squeeze()).mode().detach().cpu().numpy()
             latent = (latent - latent.min()) / (latent.max() - latent.min()) * 2 - 1
 
             for element_idx in range(len(batch['label'])):
-                label = np.array(batch['label'].to('cpu'))[element_idx]
+                label = batch['label'].detach().cpu().numpy()[element_idx]
                 file_id = batch['subject'][element_idx]
                 time_slice = int(batch['time_slice'][element_idx])
                 np.save(file=os.path.join(asset_path, f'{file_id}-{time_slice}.npy'), arr=latent[element_idx])
